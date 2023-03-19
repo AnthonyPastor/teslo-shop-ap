@@ -198,9 +198,11 @@ export const getServerSideProps: GetServerSideProps = async ({
 	}
 
 	try {
+		console.log("hola");
 		const { data } = await tesloApi.get(`order/id/${id.toString()}`, {
 			headers: { Authorization: `Bearer ${token}` },
 		});
+		console.log("hola2", data);
 
 		const order = data.data;
 
