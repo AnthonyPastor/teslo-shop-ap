@@ -199,12 +199,12 @@ export const getServerSideProps: GetServerSideProps = async ({
 
 	try {
 		console.log("hola");
-		const { data } = await tesloApi.get(`order/id/${id.toString()}`, {
-			headers: { Authorization: `Bearer ${token}` },
-		});
-		console.log("hola2", data);
+		// const { data } = await tesloApi.get(`order/id/${id.toString()}`, {
+		// 	headers: { Authorization: `Bearer ${token}` },
+		// });
+		// console.log("hola2", data);
 
-		const order = data.data;
+		const order = {};
 
 		if (!order) {
 			return {
@@ -215,18 +215,18 @@ export const getServerSideProps: GetServerSideProps = async ({
 			};
 		}
 
-		console.log(order.user);
+		// console.log(order.user);
 
 		const { user } = await jwt.isValidToken(token);
 
-		if (!user || order.user !== user._id) {
-			return {
-				redirect: {
-					destination: "/orders/history",
-					permanent: false,
-				},
-			};
-		}
+		// if (!user || order.user !== user._id) {
+		// 	return {
+		// 		redirect: {
+		// 			destination: "/orders/history",
+		// 			permanent: false,
+		// 		},
+		// 	};
+		// }
 
 		return {
 			props: {
