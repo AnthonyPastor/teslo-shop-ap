@@ -159,28 +159,28 @@ const LoginPage = () => {
 // You should use getServerSideProps when:
 // - Only if you need to pre-render a page whose data must be fetched at request time
 
-export const getServerSideProps: GetServerSideProps = async ({
-	req,
-	query,
-}) => {
-	const token = req.cookies["token"];
+// export const getServerSideProps: GetServerSideProps = async ({
+// 	req,
+// 	query,
+// }) => {
+// 	// const token = req.cookies["token"];
 
-	const { p = "/" } = query;
+// 	// const { p = "/" } = query;
 
-	const isValidToken = (await jwt.isValidToken(token)).user !== undefined;
+// 	// const isValidToken = (await jwt.isValidToken(token)).user !== undefined;
 
-	if (isValidToken) {
-		return {
-			redirect: {
-				destination: p.toString(),
-				permanent: false,
-			},
-		};
-	}
+// 	// if (isValidToken) {
+// 	// 	return {
+// 	// 		redirect: {
+// 	// 			destination: p.toString(),
+// 	// 			permanent: false,
+// 	// 		},
+// 	// 	};
+// 	// }
 
-	return {
-		props: {},
-	};
-};
+// 	return {
+// 		props: {},
+// 	};
+// };
 
 export default LoginPage;
