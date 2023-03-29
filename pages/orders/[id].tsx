@@ -26,6 +26,7 @@ import { useEffect, useState } from "react";
 import { jwt } from "../../utils";
 import { ApiResponse } from "../../interfaces/apiResponse";
 import Cookies from "js-cookie";
+import { FullScreenLoading } from "../../components/ui/FullScreenLoading";
 
 export type OrderResponseBody = {
 	id: string;
@@ -74,7 +75,7 @@ const OrderPage = () => {
 		}
 	}, [id]);
 
-	if (!order) return <div>Loading...</div>;
+	if (!order) return <FullScreenLoading />;
 
 	const { shippingAddress } = order;
 

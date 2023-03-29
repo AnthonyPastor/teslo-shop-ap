@@ -22,6 +22,7 @@ import { jwt } from "../../../utils";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
+import { FullScreenLoading } from "../../../components/ui/FullScreenLoading";
 
 export type OrderResponseBody = {
 	id: string;
@@ -69,7 +70,7 @@ const OrderPage = () => {
 		}
 	}, [router]);
 
-	if (!order) return <div>Loading...</div>;
+	if (!order) return <FullScreenLoading />;
 
 	const { shippingAddress } = order;
 

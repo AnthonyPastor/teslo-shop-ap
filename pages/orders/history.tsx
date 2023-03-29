@@ -12,6 +12,7 @@ import { ApiResponse } from "../../interfaces/apiResponse";
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
+import { FullScreenLoading } from "../../components/ui/FullScreenLoading";
 
 const columns: GridColDef[] = [
 	{ field: "id", headerName: "ID", width: 100 },
@@ -75,7 +76,7 @@ const HistoryPage = () => {
 		}
 	}, [router]);
 
-	if (!orders) return <div>Loading...</div>;
+	if (!orders) return <FullScreenLoading />;
 
 	const rows = orders.map((order, idx) => ({
 		id: idx + 1,

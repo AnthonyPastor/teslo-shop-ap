@@ -31,9 +31,9 @@ import {
 import { AdminLayout } from "../../../components/layouts";
 import { IProduct } from "../../../interfaces";
 import { tesloApi } from "../../../api";
-import { Product } from "../../../models";
 import { ApiResponse } from "../../../interfaces/apiResponse";
 import { FullScreenLoading } from "../../../components/ui/FullScreenLoading";
+import { IType } from "../../../interfaces/products";
 
 const validTypes = ["shirts", "pants", "hoodies", "hats"];
 const validGender = ["men", "women", "kid", "unisex"];
@@ -62,7 +62,23 @@ const ProductAdminPage = () => {
 	const [newTagValue, setNewTagValue] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
 
-	const [product, setProduct] = useState<IProduct>();
+	const [product, setProduct] = useState<IProduct>({
+		description: "",
+		images: [],
+		inStock: 0,
+		price: 0,
+		sizes: [],
+		slug: "",
+		tags: [],
+		title: "",
+		type: "hats",
+		gender: "unisex",
+
+		// TODO: agregar createdAt y updatedAt
+		createdAt: "",
+		updatedAt: "",
+		_id: "new",
+	});
 
 	const {
 		register,
@@ -71,20 +87,38 @@ const ProductAdminPage = () => {
 		getValues,
 		setValue,
 		watch,
+		reset,
 	} = useForm<FormData>({
 		defaultValues: product,
 	});
 
 	// TODO: Replace with SSR when upgrade to Paid Hosting
 	useEffect(() => {
-		let product: IProduct | null = null;
+		let product: IProduct | null;
 
 		if (slug === "new") {
-			const tempProduct = JSON.parse(JSON.stringify(new Product()));
+			const tempProduct: IProduct = {
+				description: "",
+				images: [],
+				inStock: 0,
+				price: 0,
+				sizes: [],
+				slug: "",
+				tags: [],
+				title: "",
+				type: "hats",
+				gender: "unisex",
 
-			delete tempProduct._id;
+				// TODO: agregar createdAt y updatedAt
+				createdAt: "",
+				updatedAt: "",
+				_id: "new",
+			};
 
 			product = tempProduct;
+
+			setProduct(product);
+			reset(product);
 		} else {
 			const getProduct = async () => {
 				const { data } = await tesloApi.get<ApiResponse<IProduct>>(
@@ -96,15 +130,15 @@ const ProductAdminPage = () => {
 				} else {
 					product = null;
 				}
+				if (!product) {
+					router.push("/admin/products");
+				} else {
+					setProduct(product);
+					reset(product);
+				}
 			};
 
 			getProduct();
-		}
-
-		if (!product) {
-			router.push("/admin/products");
-		} else {
-			setProduct(product);
 		}
 	}, [slug]);
 
@@ -127,7 +161,7 @@ const ProductAdminPage = () => {
 		};
 	}, [watch, setValue]);
 
-	if (!product) return <FullScreenLoading></FullScreenLoading>;
+	if (!product) return <FullScreenLoading />;
 
 	const onChangeSize = (size: string) => {
 		const currentSizes = getValues("sizes");
@@ -436,7 +470,7 @@ const ProductAdminPage = () => {
 								style={{ display: "none" }}
 								onChange={onFileSelected}
 							/>
-							{getValues("images").length < 2 ? (
+							{getValues("images")?.length < 2 ? (
 								<Chip
 									label='Es necesario al 2 imagenes'
 									color='error'
