@@ -79,36 +79,36 @@ const SearchPage = () => {
 
 // You should use getServerSideProps when:
 // - Only if you need to pre-render a page whose data must be fetched at request time
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-	const { query = "" } = params as { query: string };
+// export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+// 	const { query = "" } = params as { query: string };
 
-	if (query.length === 0) {
-		return {
-			redirect: {
-				destination: "/",
-				permanent: true,
-			},
-		};
-	}
+// 	if (query.length === 0) {
+// 		return {
+// 			redirect: {
+// 				destination: "/",
+// 				permanent: true,
+// 			},
+// 		};
+// 	}
 
-	// y no hay productos
-	let { data } = await tesloApi.get(`/product/search/${query}`);
-	let products = data?.data || [];
-	const foundProducts = products.length > 0;
+// 	// y no hay productos
+// 	let { data } = await tesloApi.get(`/product/search/${query}`);
+// 	let products = data?.data || [];
+// 	const foundProducts = products.length > 0;
 
-	// TODO: retornar otros productos
-	if (!foundProducts) {
-		// products = await dbProducts.getAllProducts();
-		products = (await tesloApi.get(`/product/search/shirt`)).data.data;
-	}
+// 	// TODO: retornar otros productos
+// 	if (!foundProducts) {
+// 		// products = await dbProducts.getAllProducts();
+// 		products = (await tesloApi.get(`/product/search/shirt`)).data.data;
+// 	}
 
-	return {
-		props: {
-			products,
-			foundProducts,
-			query,
-		},
-	};
-};
+// 	return {
+// 		props: {
+// 			products,
+// 			foundProducts,
+// 			query,
+// 		},
+// 	};
+// };
 
 export default SearchPage;
