@@ -19,6 +19,7 @@ import { AuthLayout } from "../../components/layouts";
 import { jwt, validations } from "../../utils";
 import { useRouter } from "next/router";
 import { AuthContext } from "../../context/auth/AuthContext";
+import Cookies from "js-cookie";
 
 type FormData = {
 	email: string;
@@ -36,6 +37,24 @@ const LoginPage = () => {
 		formState: { errors },
 	} = useForm<FormData>();
 	const [showError, setShowError] = useState(false);
+
+	// TODO: Replace with SSR when upgrade to Paid Hosting
+	useEffect(() => {
+		const token = Cookies.get("token");
+
+		const { p = "/" } = router.query;
+
+		const validateToken = async () => {
+			const isValidToken =
+				(await jwt.isValidToken(token || "")).user !== undefined;
+
+			if (isValidToken) {
+				router.push(p.toString());
+			}
+		};
+
+		validateToken();
+	}, [router]);
 
 	const onLoginUser = async ({ email, password }: FormData) => {
 		setShowError(false);
@@ -163,20 +182,20 @@ const LoginPage = () => {
 // 	req,
 // 	query,
 // }) => {
-// 	// const token = req.cookies["token"];
+// 	const token = req.cookies["token"];
 
-// 	// const { p = "/" } = query;
+// 	const { p = "/" } = query;
 
-// 	// const isValidToken = (await jwt.isValidToken(token)).user !== undefined;
+// 	const isValidToken = (await jwt.isValidToken(token)).user !== undefined;
 
-// 	// if (isValidToken) {
-// 	// 	return {
-// 	// 		redirect: {
-// 	// 			destination: p.toString(),
-// 	// 			permanent: false,
-// 	// 		},
-// 	// 	};
-// 	// }
+// 	if (isValidToken) {
+// 		return {
+// 			redirect: {
+// 				destination: p.toString(),
+// 				permanent: false,
+// 			},
+// 		};
+// 	}
 
 // 	return {
 // 		props: {},

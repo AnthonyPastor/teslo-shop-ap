@@ -52,17 +52,16 @@ interface FormData {
 	gender: string;
 }
 
-interface Props {
-	product: IProduct;
-}
-
-const ProductAdminPage: FC<Props> = ({ product }) => {
+const ProductAdminPage = () => {
 	const router = useRouter();
+	const { slug } = router.query;
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const [newTagValue, setNewTagValue] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
+
+	const [product, setProduct] = useState<IProduct>();
 
 	const {
 		register,
@@ -74,6 +73,39 @@ const ProductAdminPage: FC<Props> = ({ product }) => {
 	} = useForm<FormData>({
 		defaultValues: product,
 	});
+
+	// TODO: Replace with SSR when upgrade to Paid Hosting
+	useEffect(() => {
+		let product: IProduct | null = null;
+
+		if (slug === "new") {
+			const tempProduct = JSON.parse(JSON.stringify(new Product()));
+
+			delete tempProduct._id;
+
+			product = tempProduct;
+		} else {
+			const getProduct = async () => {
+				const { data } = await tesloApi.get<ApiResponse<IProduct>>(
+					`/product/slug/${slug?.toString()}`
+				);
+
+				if (data.success) {
+					product = data.data;
+				} else {
+					product = null;
+				}
+			};
+
+			getProduct();
+		}
+
+		if (!product) {
+			router.push("/admin/products");
+		} else {
+			setProduct(product);
+		}
+	}, [slug]);
 
 	useEffect(() => {
 		const subscription = watch((value, { name, type }) => {
@@ -189,7 +221,7 @@ const ProductAdminPage: FC<Props> = ({ product }) => {
 	return (
 		<AdminLayout
 			title={"Producto"}
-			subtitle={`Editando: ${product.title}`}
+			subtitle={`Editando: ${product?.title}`}
 			icon={<DriveFileRenameOutline />}
 		>
 			<form onSubmit={handleSubmit(onSubmit)}>
@@ -444,43 +476,43 @@ const ProductAdminPage: FC<Props> = ({ product }) => {
 // You should use getServerSideProps when:
 // - Only if you need to pre-render a page whose data must be fetched at request time
 
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-	const { slug = "" } = query;
+// export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+// 	const { slug = "" } = query;
 
-	let product: IProduct | null;
+// 	let product: IProduct | null;
 
-	if (slug === "new") {
-		const tempProduct = JSON.parse(JSON.stringify(new Product()));
+// 	if (slug === "new") {
+// 		const tempProduct = JSON.parse(JSON.stringify(new Product()));
 
-		delete tempProduct._id;
+// 		delete tempProduct._id;
 
-		product = tempProduct;
-	} else {
-		const { data } = await tesloApi.get<ApiResponse<IProduct>>(
-			`/product/slug/${slug.toString()}`
-		);
+// 		product = tempProduct;
+// 	} else {
+// 		const { data } = await tesloApi.get<ApiResponse<IProduct>>(
+// 			`/product/slug/${slug.toString()}`
+// 		);
 
-		if (data.success) {
-			product = data.data;
-		} else {
-			product = null;
-		}
-	}
+// 		if (data.success) {
+// 			product = data.data;
+// 		} else {
+// 			product = null;
+// 		}
+// 	}
 
-	if (!product) {
-		return {
-			redirect: {
-				destination: "/admin/products",
-				permanent: false,
-			},
-		};
-	}
+// 	if (!product) {
+// 		return {
+// 			redirect: {
+// 				destination: "/admin/products",
+// 				permanent: false,
+// 			},
+// 		};
+// 	}
 
-	return {
-		props: {
-			product,
-		},
-	};
-};
+// 	return {
+// 		props: {
+// 			product,
+// 		},
+// 	};
+// };
 
 export default ProductAdminPage;

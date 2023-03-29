@@ -1,16 +1,6 @@
 import { useContext, useEffect } from "react";
 import { useRouter } from "next/router";
-import {
-	Box,
-	Button,
-	FormControl,
-	Grid,
-	InputLabel,
-	MenuItem,
-	Select,
-	TextField,
-	Typography,
-} from "@mui/material";
+import { Box, Button, Grid, TextField, Typography } from "@mui/material";
 import Cookies from "js-cookie";
 import { useForm } from "react-hook-form";
 
@@ -64,6 +54,22 @@ const AddressPage = () => {
 			phone: "",
 		},
 	});
+
+	// TODO: Replace with SSR when upgrade to Paid Hosting
+	useEffect(() => {
+		const token = Cookies.get("token");
+
+		const validateToken = async () => {
+			const isValidToken =
+				(await jwt.isValidToken(token || "")).user !== undefined;
+
+			if (!isValidToken) {
+				router.push("/auth/login?p=/checkout/address");
+			}
+		};
+
+		validateToken();
+	}, [router]);
 
 	useEffect(() => {
 		reset(getAddressFromCookies());

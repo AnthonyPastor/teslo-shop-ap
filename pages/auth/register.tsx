@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useRouter } from "next/router";
 import { GetServerSideProps } from "next";
 
@@ -19,6 +19,7 @@ import { ErrorOutline } from "@mui/icons-material";
 import { AuthContext } from "../../context";
 import { AuthLayout } from "../../components/layouts";
 import { jwt, validations } from "../../utils";
+import Cookies from "js-cookie";
 
 type FormData = {
 	name: string;
@@ -37,6 +38,24 @@ const RegisterPage = () => {
 	} = useForm<FormData>();
 	const [showError, setShowError] = useState(false);
 	const [errorMessage, setErrorMessage] = useState("");
+
+	// TODO: Replace with SSR when upgrade to Paid Hosting
+	useEffect(() => {
+		const token = Cookies.get("token");
+
+		const { p = "/" } = router.query;
+
+		const validateToken = async () => {
+			const isValidToken =
+				(await jwt.isValidToken(token || "")).user !== undefined;
+
+			if (isValidToken) {
+				router.push(p.toString());
+			}
+		};
+
+		validateToken();
+	}, [router]);
 
 	const onRegisterForm = async ({ name, email, password }: FormData) => {
 		setShowError(false);
@@ -148,28 +167,28 @@ const RegisterPage = () => {
 	);
 };
 
-export const getServerSideProps: GetServerSideProps = async ({
-	req,
-	query,
-}) => {
-	const token = req.cookies["token"];
+// export const getServerSideProps: GetServerSideProps = async ({
+// 	req,
+// 	query,
+// }) => {
+// 	const token = req.cookies["token"];
 
-	const { p = "/" } = query;
+// 	const { p = "/" } = query;
 
-	const isValidToken = (await jwt.isValidToken(token)).user !== undefined;
+// 	const isValidToken = (await jwt.isValidToken(token)).user !== undefined;
 
-	if (isValidToken) {
-		return {
-			redirect: {
-				destination: p.toString(),
-				permanent: false,
-			},
-		};
-	}
+// 	if (isValidToken) {
+// 		return {
+// 			redirect: {
+// 				destination: p.toString(),
+// 				permanent: false,
+// 			},
+// 		};
+// 	}
 
-	return {
-		props: {},
-	};
-};
+// 	return {
+// 		props: {},
+// 	};
+// };
 
 export default RegisterPage;

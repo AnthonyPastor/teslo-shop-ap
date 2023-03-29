@@ -19,6 +19,9 @@ import { AdminLayout } from "../../../components/layouts";
 import { CartList, OrderSummary } from "../../../components/cart";
 import { tesloApi } from "../../../api";
 import { jwt } from "../../../utils";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import Cookies from "js-cookie";
 
 export type OrderResponseBody = {
 	id: string;
@@ -30,11 +33,44 @@ export type OrderResponseBody = {
 		| "PAYER_ACTION_REQUIRED";
 };
 
-interface Props {
-	order: IOrder;
-}
+const OrderPage = () => {
+	const router = useRouter();
 
-const OrderPage: NextPage<Props> = ({ order }) => {
+	const [order, setOrder] = useState<IOrder>();
+
+	useEffect(() => {
+		const { id = "" } = router.query;
+		const token = Cookies.get("token");
+
+		if (!token) {
+			router.push(`/auth/login?p=/orders/${id}`);
+		}
+
+		try {
+			const getOrder = async () => {
+				const order = (await tesloApi.get(`order/${id.toString()}`)).data.data;
+
+				if (!order) {
+					router.push("/admin/orders");
+				}
+				const { user } = await jwt.isValidToken(token || "");
+
+				if (!user || order.user._id !== user._id) {
+					router.push("/admin/orders");
+				}
+
+				setOrder(order);
+			};
+
+			getOrder();
+		} catch (error) {
+			console.error(error);
+			router.push("/admin/orders");
+		}
+	}, [router]);
+
+	if (!order) return <div>Loading...</div>;
+
 	const { shippingAddress } = order;
 
 	return (
@@ -125,57 +161,57 @@ const OrderPage: NextPage<Props> = ({ order }) => {
 // You should use getServerSideProps when:
 // - Only if you need to pre-render a page whose data must be fetched at request time
 
-export const getServerSideProps: GetServerSideProps = async ({
-	req,
-	query,
-}) => {
-	const { id = "" } = query;
-	const token = req.cookies["token"];
+// export const getServerSideProps: GetServerSideProps = async ({
+// 	req,
+// 	query,
+// }) => {
+// 	const { id = "" } = query;
+// 	const token = req.cookies["token"];
 
-	if (!token) {
-		return {
-			redirect: {
-				destination: `/auth/login?p=/orders/${id}`,
-				permanent: false,
-			},
-		};
-	}
+// 	if (!token) {
+// 		return {
+// 			redirect: {
+// 				destination: `/auth/login?p=/orders/${id}`,
+// 				permanent: false,
+// 			},
+// 		};
+// 	}
 
-	try {
-		const order = (await tesloApi.get(`order/${id.toString()}`)).data.data;
+// 	try {
+// 		const order = (await tesloApi.get(`order/${id.toString()}`)).data.data;
 
-		if (!order) {
-			return {
-				redirect: {
-					destination: "/admin/orders",
-					permanent: false,
-				},
-			};
-		}
-		const { user } = await jwt.isValidToken(token);
+// 		if (!order) {
+// 			return {
+// 				redirect: {
+// 					destination: "/admin/orders",
+// 					permanent: false,
+// 				},
+// 			};
+// 		}
+// 		const { user } = await jwt.isValidToken(token);
 
-		if (!user || order.user._id !== user._id) {
-			return {
-				redirect: {
-					destination: "/admin/orders",
-					permanent: false,
-				},
-			};
-		}
+// 		if (!user || order.user._id !== user._id) {
+// 			return {
+// 				redirect: {
+// 					destination: "/admin/orders",
+// 					permanent: false,
+// 				},
+// 			};
+// 		}
 
-		return {
-			props: {
-				order,
-			},
-		};
-	} catch (error) {
-		return {
-			redirect: {
-				destination: "/admin/orders",
-				permanent: false,
-			},
-		};
-	}
-};
+// 		return {
+// 			props: {
+// 				order,
+// 			},
+// 		};
+// 	} catch (error) {
+// 		return {
+// 			redirect: {
+// 				destination: "/admin/orders",
+// 				permanent: false,
+// 			},
+// 		};
+// 	}
+// };
 
 export default OrderPage;

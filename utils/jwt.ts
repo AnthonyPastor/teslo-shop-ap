@@ -22,7 +22,6 @@ export const isValidToken = async (
 	token: string
 ): Promise<{ token: string; user?: IUser }> => {
 	try {
-		console.log(`${process.env.NEXT_PUBLIC_API_URL}/auth/validate-token`);
 		const request = await fetch(
 			`${process.env.NEXT_PUBLIC_API_URL}/auth/validate-token`,
 			{
@@ -35,8 +34,6 @@ export const isValidToken = async (
 		);
 
 		const data = await request.json();
-
-		console.log(data);
 
 		return { token: data.token, user: data.user };
 	} catch (error) {

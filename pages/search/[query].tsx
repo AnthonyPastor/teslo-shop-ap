@@ -7,14 +7,42 @@ import { ProductList } from "../../components/products";
 
 import { IProduct } from "../../interfaces";
 import { tesloApi } from "../../api";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
-interface Props {
-	products: IProduct[];
-	foundProducts: boolean;
-	query: string;
-}
+const SearchPage = () => {
+	const router = useRouter();
 
-const SearchPage: NextPage<Props> = ({ products, foundProducts, query }) => {
+	const { query = "" } = router.query;
+
+	const [products, setProducts] = useState<IProduct[]>([]);
+	const [foundProducts, setFoundProducts] = useState(false);
+
+	useEffect(() => {
+		if (query.length === 0) {
+			router.replace("/");
+		} else {
+			// y no hay productos
+
+			const getProducts = async () => {
+				let { data } = await tesloApi.get(`/product/search/${query}`);
+				let products = data?.data || [];
+				const foundProducts = products.length > 0;
+
+				// TODO: retornar otros productos
+				if (!foundProducts) {
+					// products = await dbProducts.getAllProducts();
+					products = (await tesloApi.get(`/product/search/shirt`)).data.data;
+				}
+
+				setProducts(products);
+				setFoundProducts(foundProducts);
+			};
+
+			getProducts();
+		}
+	}, [router, query]);
+
 	return (
 		<ShopLayout
 			title={"Teslo-Shop - Search"}

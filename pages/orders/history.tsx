@@ -9,6 +9,9 @@ import { IOrder } from "../../interfaces";
 import { tesloApi } from "../../api";
 import { jwt } from "../../utils";
 import { ApiResponse } from "../../interfaces/apiResponse";
+import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
+import { useRouter } from "next/router";
 
 const columns: GridColDef[] = [
 	{ field: "id", headerName: "ID", width: 100 },
@@ -42,13 +45,38 @@ const columns: GridColDef[] = [
 	},
 ];
 
-interface Props {
-	orders: IOrder[];
-}
+const HistoryPage = () => {
+	const router = useRouter();
+	const [orders, setOrders] = useState<IOrder[]>();
 
-const HistoryPage: NextPage<Props> = ({ orders }) => {
-	// const rows = ..
-	// { id: indice + 1, paid: true, fullname: 'Fernando Herrera', orderId: 1283781237123 }
+	useEffect(() => {
+		const token = Cookies.get("token");
+
+		if (!token) {
+			router.push("/auth/login?p=/orders/history");
+		} else {
+			const getOrders = async () => {
+				const { user } = await jwt.isValidToken(token);
+
+				if (!user) router.push("/auth/login?p=/orders/history");
+				else {
+					const { data } = await tesloApi.get<ApiResponse<IOrder[]>>(
+						`order/user/${user._id}`,
+						{
+							headers: { Authorization: `Bearer ${token}` },
+						}
+					);
+
+					setOrders(data.data);
+				}
+			};
+
+			getOrders();
+		}
+	}, [router]);
+
+	if (!orders) return <div>Loading...</div>;
+
 	const rows = orders.map((order, idx) => ({
 		id: idx + 1,
 		paid: order.isPaid,
@@ -82,39 +110,39 @@ const HistoryPage: NextPage<Props> = ({ orders }) => {
 // You should use getServerSideProps when:
 // - Only if you need to pre-render a page whose data must be fetched at request time
 
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-	const token = req.cookies["token"];
+// export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+// 	const token = req.cookies["token"];
 
-	if (!token) {
-		return {
-			redirect: {
-				destination: "/auth/login?p=/orders/history",
-				permanent: false,
-			},
-		};
-	}
+// 	if (!token) {
+// 		return {
+// 			redirect: {
+// 				destination: "/auth/login?p=/orders/history",
+// 				permanent: false,
+// 			},
+// 		};
+// 	}
 
-	const { user } = await jwt.isValidToken(token);
+// 	const { user } = await jwt.isValidToken(token);
 
-	if (!user)
-		return {
-			redirect: {
-				destination: "/auth/login?p=/orders/history",
-				permanent: false,
-			},
-		};
-	const { data } = await tesloApi.get<ApiResponse<IOrder[]>>(
-		`order/user/${user._id}`,
-		{
-			headers: { Authorization: `Bearer ${token}` },
-		}
-	);
+// 	if (!user)
+// 		return {
+// 			redirect: {
+// 				destination: "/auth/login?p=/orders/history",
+// 				permanent: false,
+// 			},
+// 		};
+// 	const { data } = await tesloApi.get<ApiResponse<IOrder[]>>(
+// 		`order/user/${user._id}`,
+// 		{
+// 			headers: { Authorization: `Bearer ${token}` },
+// 		}
+// 	);
 
-	return {
-		props: {
-			orders: data.data,
-		},
-	};
-};
+// 	return {
+// 		props: {
+// 			orders: data.data,
+// 		},
+// 	};
+// };
 
 export default HistoryPage;

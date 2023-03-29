@@ -22,7 +22,7 @@ import { CartList, OrderSummary } from "../../components/cart";
 import { IOrder } from "../../interfaces";
 import { tesloApi } from "../../api";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { jwt } from "../../utils";
 import { ApiResponse } from "../../interfaces/apiResponse";
 import Cookies from "js-cookie";
@@ -37,15 +37,46 @@ export type OrderResponseBody = {
 		| "PAYER_ACTION_REQUIRED";
 };
 
-interface Props {
-	order: IOrder;
-}
-
-const OrderPage: NextPage<Props> = ({ order }) => {
+const OrderPage = () => {
 	const router = useRouter();
-	const { shippingAddress } = order;
+	const { id } = router.query;
 
 	const [isPaying, setIsPaying] = useState(false);
+
+	const [order, setOrder] = useState<IOrder>();
+
+	// TODO: Replace with SSR when upgrade to Paid Hosting
+	useEffect(() => {
+		if (!Cookies.get("token")) {
+			router.push(`/auth/login?p=/orders/${id}`);
+		} else {
+			const getOrder = async () => {
+				const { data } = await tesloApi.get(`order/id/${id?.toString()}`, {
+					headers: { Authorization: `Bearer ${Cookies.get("token")}` },
+				});
+
+				const order = data.data;
+
+				if (!order) {
+					router.push("/orders/history");
+				} else {
+					const { user } = await jwt.isValidToken(Cookies.get("token") || "");
+
+					if (!user || order.user !== user._id) {
+						router.push("/orders/history");
+					} else {
+						setOrder(order);
+					}
+				}
+			};
+
+			getOrder();
+		}
+	}, [id]);
+
+	if (!order) return <div>Loading...</div>;
+
+	const { shippingAddress } = order;
 
 	const onOrderCompleted = async () => {
 		setIsPaying(true);
@@ -55,8 +86,8 @@ const OrderPage: NextPage<Props> = ({ order }) => {
 				`order/pay`,
 				{
 					orderId: order._id,
-				}
-				// { headers: { Authorization: `Bearer ${Cookies.get("token")}` } }
+				},
+				{ headers: { Authorization: `Bearer ${Cookies.get("token")}` } }
 			);
 
 			setIsPaying(false);
@@ -65,8 +96,6 @@ const OrderPage: NextPage<Props> = ({ order }) => {
 			else alert(data.message);
 		} catch (error) {
 			setIsPaying(false);
-			console.log(error);
-			alert("error");
 		}
 	};
 
@@ -181,67 +210,62 @@ const OrderPage: NextPage<Props> = ({ order }) => {
 // You should use getServerSideProps when:
 // - Only if you need to pre-render a page whose data must be fetched at request time
 
-export const getServerSideProps: GetServerSideProps = async ({
-	req,
-	query,
-}) => {
-	const { id = "" } = query;
-	const token = req.cookies["token"];
+// export const getServerSideProps: GetServerSideProps = async ({
+// 	req,
+// 	query,
+// }) => {
+// 	const { id = "" } = query;
+// 	const token = req.cookies["token"];
 
-	if (!token) {
-		return {
-			redirect: {
-				destination: `/auth/login?p=/orders/${id}`,
-				permanent: false,
-			},
-		};
-	}
+// 	if (!token) {
+// 		return {
+// 			redirect: {
+// 				destination: `/auth/login?p=/orders/${id}`,
+// 				permanent: false,
+// 			},
+// 		};
+// 	}
 
-	try {
-		console.log("hola");
-		// const { data } = await tesloApi.get(`order/id/${id.toString()}`, {
-		// 	headers: { Authorization: `Bearer ${token}` },
-		// });
-		// console.log("hola2", data);
+// 	try {
+// 		const { data } = await tesloApi.get(`order/id/${id.toString()}`, {
+// 			headers: { Authorization: `Bearer ${token}` },
+// 		});
 
-		const order = {};
+// 		const order = data.data;
 
-		if (!order) {
-			return {
-				redirect: {
-					destination: "/orders/history",
-					permanent: false,
-				},
-			};
-		}
+// 		if (!order) {
+// 			return {
+// 				redirect: {
+// 					destination: "/orders/history",
+// 					permanent: false,
+// 				},
+// 			};
+// 		}
 
-		// console.log(order.user);
+// 		const { user } = await jwt.isValidToken(token);
 
-		const { user } = await jwt.isValidToken(token);
+// 		if (!user || order.user !== user._id) {
+// 			return {
+// 				redirect: {
+// 					destination: "/orders/history",
+// 					permanent: false,
+// 				},
+// 			};
+// 		}
 
-		// if (!user || order.user !== user._id) {
-		// 	return {
-		// 		redirect: {
-		// 			destination: "/orders/history",
-		// 			permanent: false,
-		// 		},
-		// 	};
-		// }
-
-		return {
-			props: {
-				order,
-			},
-		};
-	} catch (error) {
-		console.error(error);
-		return {
-			redirect: {
-				destination: `/auth/login?p=/orders/${id}`,
-				permanent: false,
-			},
-		};
-	}
-};
+// 		return {
+// 			props: {
+// 				order,
+// 			},
+// 		};
+// 	} catch (error) {
+// 		return {
+// 			redirect: {
+// 				destination: `/auth/login?p=/orders/${id}`,
+// 				permanent: false,
+// 			},
+// 		};
+// 	}
+// };
 
 export default OrderPage;
