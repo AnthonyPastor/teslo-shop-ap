@@ -33,6 +33,7 @@ import { IProduct } from "../../../interfaces";
 import { tesloApi } from "../../../api";
 import { Product } from "../../../models";
 import { ApiResponse } from "../../../interfaces/apiResponse";
+import { FullScreenLoading } from "../../../components/ui/FullScreenLoading";
 
 const validTypes = ["shirts", "pants", "hoodies", "hats"];
 const validGender = ["men", "women", "kid", "unisex"];
@@ -126,10 +127,12 @@ const ProductAdminPage = () => {
 		};
 	}, [watch, setValue]);
 
+	if (!product) return <FullScreenLoading></FullScreenLoading>;
+
 	const onChangeSize = (size: string) => {
 		const currentSizes = getValues("sizes");
 
-		if (currentSizes.includes(size)) {
+		if (currentSizes?.includes(size)) {
 			setValue(
 				"sizes",
 				currentSizes.filter((s) => s !== size),
@@ -147,7 +150,7 @@ const ProductAdminPage = () => {
 
 		const currentTags = getValues("tags");
 
-		if (!currentTags.includes(newTag)) {
+		if (!currentTags?.includes(newTag)) {
 			currentTags.push(newTag);
 		}
 
@@ -306,7 +309,7 @@ const ProductAdminPage = () => {
 									setValue("type", event.target.value, { shouldValidate: true })
 								}
 							>
-								{validTypes.map((option) => (
+								{validTypes?.map((option) => (
 									<FormControlLabel
 										key={option}
 										value={option}
@@ -328,7 +331,7 @@ const ProductAdminPage = () => {
 									})
 								}
 							>
-								{validGender.map((option) => (
+								{validGender?.map((option) => (
 									<FormControlLabel
 										key={option}
 										value={option}
@@ -341,11 +344,11 @@ const ProductAdminPage = () => {
 
 						<FormGroup>
 							<FormLabel>Tallas</FormLabel>
-							{validSizes.map((size) => (
+							{validSizes?.map((size) => (
 								<FormControlLabel
 									key={size}
 									control={
-										<Checkbox checked={getValues("sizes").includes(size)} />
+										<Checkbox checked={getValues("sizes")?.includes(size)} />
 									}
 									onChange={() => onChangeSize(size)}
 									label={size}
@@ -365,7 +368,7 @@ const ProductAdminPage = () => {
 								required: "Este campo es requerido",
 								minLength: { value: 2, message: "Mínimo 2 caracteres" },
 								validate: (val) =>
-									val.trim().includes(" ")
+									val.trim()?.includes(" ")
 										? "No puede tener espacios en blanco"
 										: undefined,
 							})}
@@ -396,7 +399,7 @@ const ProductAdminPage = () => {
 							}}
 							component='ul'
 						>
-							{getValues("tags").map((tag) => {
+							{getValues("tags")?.map((tag) => {
 								return (
 									<Chip
 										key={tag}
@@ -443,7 +446,7 @@ const ProductAdminPage = () => {
 							) : null}
 
 							<Grid container spacing={2}>
-								{getValues("images").map((img) => (
+								{getValues("images")?.map((img) => (
 									<Grid item xs={4} sm={3} key={img}>
 										<Card>
 											<CardMedia
